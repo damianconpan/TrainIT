@@ -3,20 +3,44 @@
 <head>
 <meta charset="UTF-8">
 <title>Registro de Usuarios</title>
-<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <h1>Registro de Usuarios</h1>
 <form id="form">
-  <input name="nombre" placeholder="Nombre" required />
-  <input name="email" placeholder="Email" required />
-  <input name="password" placeholder="Contraseña" type="password" required minlength="6" />
-  <button>Registrar</button>
+    <input id="nombre" placeholder="Nombre" required />
+    <input id="email" placeholder="Email" required />
+    <input id="password" type="password" placeholder="Contraseña" required />
+    <button>Registrar</button>
 </form>
 
 <h2>Usuarios Registrados</h2>
 <ul id="usuarios"></ul>
 
-<script src="script.js"></script>
+<script>
+    document.getElementById('form').addEventListener('submit', async (e) => {
+        e.preventDefault()
+        const nombre = document.getElementById('nombre').value
+        const email = document.getElementById('email').value
+        const password = document.getElementById('password').value
+
+        const res = await fetch('/api/users/register', {
+            method:'POST',
+            headers:{'Content-Type': 'application/json'},
+            body: JSON.stringify({ nombre, email, password })
+        })
+        console.log(await res.json()) 
+        cargarUsuarios()
+    });
+
+    async function cargarUsuarios(){
+        const res = await fetch('/api/users/list')
+        const users = await res.json()
+        const ul = document.getElementById('usuarios')
+        ul.innerHTML = ''
+        users.forEach(u => ul.innerHTML += `<li>${u.nombre} - ${u.email}</li>`)
+    }
+    cargarUsuarios()
+</script>
+
 </body>
 </html>

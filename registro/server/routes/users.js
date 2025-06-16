@@ -1,41 +1,38 @@
-// server/routes/users.js
+// routes/users.js
 const express = require('express')
-const router = express.Router()
 const User = require('../models/User')
 const bcrypt = require('bcrypt')
 
+const router = express.Router()
 
 // Registro de nuevo usuario
 router.post('/register', async (req, res) => {
-    const { nombre, email, password } = req.body;
-
-    // Validaciones
+    const { nombre, email, password } = req.body
+    
     if (!nombre || !email || !password) {
-        return res.status(400).json({ message:'Todos los campos son obligatorios'})
-    }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-        return res.status(400).json({ message:'Formato de correo electrónico no válido'})
+        return res.status(400).json({ error:'Todos los campos son obligatorios' })
     }
     if (password.length < 6) {
-        return res.status(400).json({ message:'La password debe tener al menos 6 caracteres'})
+        return res.status(400).json({ error:'La password debe tener al menos 6 caracteres' })
     }
-    // Verificar que el correo no esté en uso
-    const existing = await User.findOne({ email })
-    if (existing) {
-        return res.status(400).json({ message:'Este correo ya está registrado'})
+    if (! /\S+@\S+\.\S+/.test(email)) {
+        return res.status(400).json({ error:'Formato de email incorrecto' })
     }
-    // Hash password
+    const existe = await User.findOne({ email })
+    if (existe) {
+        return res.status(400).json({ error:'Este email ya está registrado' })
+    }
     const passwordHash = await bcrypt.hash(password, 10)
 
-    // Crear nuevo
-    await User.create({ nombre, email, passwordHash })
-    res.json({ message:'Usuario registrado con éxito'})
+    const nuevoUsuario = new User({ nombre, email, passwordHash })
+    await nuevoUsuario.save()
+    res.json({ message:'Usuario registrado con éxito' })
 });
 
-// Listar todos los usuarios
+// Listado de Usuarios
 router.get('/list', async (req, res) => {
-    const users = await User.find({}, { passwordHash: 0 })
+    const users = await User.find({}, '-passwordHash')
     res.json(users)
-})
+});
 
 module.exports = router
